@@ -23,16 +23,16 @@ class UsersModel:
         cursor.execute('''CREATE TABLE IF NOT EXISTS users 
                                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                                  user_name VARCHAR(50),
-                                 password_hash VARCHAR(128)
-                                 )''')
+                                 password_hash VARCHAR(128),
+                                 user_type VARCHAR(10))''')
         cursor.close()
         self.connection.commit()
 
-    def insert(self, user_name, password):
+    def insert(self, user_name, password, user_type):
         cursor = self.connection.cursor()
         cursor.execute('''INSERT INTO users 
-                              (user_name, password_hash) 
-                              VALUES (?,?)''', (user_name, password))
+                              (user_name, password_hash, user_type) 
+                              VALUES (?,?,?)''', (user_name, password, user_type))
         cursor.close()
         self.connection.commit()
 
@@ -84,6 +84,8 @@ class AskModel:
         cursor.execute('''UPDATE asks
                             SET answer = ?
                             WHERE id = ?''', (answer, str(question_id),))
+        cursor.close()
+        self.connection.commit()
 
     def get(self, asks_id):
         cursor = self.connection.cursor()
@@ -106,3 +108,65 @@ class AskModel:
         cursor.execute('''DELETE FROM asks WHERE id = ?''', (str(asks_id),))
         cursor.close()
         self.connection.commit()
+
+
+class TasksModel:
+    def __init__(self, connection):
+        self.connection = connection
+
+    def init_table(self):
+        cursor = self.connection.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS tasks
+                            (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            id_customer INTEGER,
+                            task VARCHAR(1000),
+                            status VARCHAR(10))''')
+        cursor.close()
+        self.connection.commit()
+
+    def insert_task(self, id_customer, task, status):
+        cursor = self.connection.cursor()
+        cursor.execute('''INSERT INTO tasks
+                        (id_customer, task, status)
+                        VALUES (?,?,?)''', (str(id_customer), task, status))
+        cursor.close()
+        self.connection.commit()
+
+    def get(self, task_id):
+        cursor = self.connection.cursor()
+        cursor.execute('''SELECT * FROM tasks WHERE id = ?''', str(task_id))
+        row = cursor.fetchone()
+        return row
+
+
+class RequestModel:
+    def __init__(self, connection):
+        self.connection = connection
+
+    def init_table(self):
+        cursor = self.connection.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS requests
+                        (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        id_performer INTEGER,
+                        request VARCHAR(1000),
+                        id_task INTEGER)''')
+        cursor.close()
+        self.connection.commit()
+
+    def insert_request(self, id_performer, request, id_task):
+        cursor = self.connection.cursor()
+        cursor.execute('''INSERT INTO requests
+                        (id_performer, request, id_task)
+                        VALUES (?,?,?)''', (str(id_performer), request, str(id_task)))
+        cursor.close()
+        self.connection.commit()
+
+    def get_by_id(self, id_task):
+        cursor = self.connection.cursor()
+        cursor.execute('''SELECT * FROM requests WHERE id_task = ?''', str(id_task))
+        rows = cursor.fetchall()
+        return rows
+
+
+if __name__ == '__main__':
+    pass
