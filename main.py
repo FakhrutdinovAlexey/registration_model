@@ -1,4 +1,5 @@
 import sqlite3
+import hashlib
 
 
 class DB:
@@ -27,11 +28,11 @@ class UsersModel:
         cursor.close()
         self.connection.commit()
 
-    def insert(self, user_name, password_hash):
+    def insert(self, user_name, password):
         cursor = self.connection.cursor()
         cursor.execute('''INSERT INTO users 
                               (user_name, password_hash) 
-                              VALUES (?,?)''', (user_name, password_hash))
+                              VALUES (?,?)''', (user_name, password))
         cursor.close()
         self.connection.commit()
 
@@ -63,31 +64,37 @@ class AskModel:
         cursor = self.connection.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS asks 
                             (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                             title VARCHAR(100),
-                             content VARCHAR(1000),
+                             question VARCHAR(1000),
+                             answer VARCHAR(10000),
                              user_id INTEGER
                              )''')
         cursor.close()
         self.connection.commit()
 
-    def insert(self, title, content, user_id):
+    def insert_question(self, question, user_id):
         cursor = self.connection.cursor()
         cursor.execute('''INSERT INTO asks 
-                          (title, content, user_id) 
-                          VALUES (?,?,?)''', (title, content, str(user_id)))
+                          (question, answer, user_id) 
+                          VALUES (?,?,?)''', (question, '', str(user_id)))
         cursor.close()
         self.connection.commit()
 
+    def insert_answer(self, answer, question_id):
+        cursor = self.connection.cursor()
+        cursor.execute('''UPDATE asks
+                            SET answer = ?
+                            WHERE id = ?''', (answer, str(question_id),))
+
     def get(self, asks_id):
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM news WHERE id = ?", (str(asks_id),))
+        cursor.execute("SELECT * FROM asks WHERE id = ?", (str(asks_id),))
         row = cursor.fetchone()
         return row
 
     def get_all(self, user_id=None):
         cursor = self.connection.cursor()
         if user_id:
-            cursor.execute("SELECT * FROM news WHERE user_id = ?",
+            cursor.execute("SELECT * FROM asks WHERE user_id = ?",
                            (str(user_id),))
         else:
             cursor.execute("SELECT * FROM asks")
@@ -99,11 +106,3 @@ class AskModel:
         cursor.execute('''DELETE FROM asks WHERE id = ?''', (str(asks_id),))
         cursor.close()
         self.connection.commit()
-
-
-
-
-
-
-    
-
